@@ -94,6 +94,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     break;
                 case FILE_MENU_NEW:
                     MessageBeep(MB_ICONERROR);
+                    break;
+                case FILE_MENU_OPEN:
+                    break;//currently does nothing
                 case FILE_MENU_EXIT:
                     exitDialog(hwnd);
                     // DO nothing if the user cancelled
@@ -118,6 +121,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 //This function is used to create the exit dialog and handle destruction if necessary
+//Probably expand this to have a save and exit option in the future
 void exitDialog(HWND hwnd)
 {
     if (MessageBox(hwnd, "Really quit?", "Quit dialog", MB_OKCANCEL) == IDOK)
