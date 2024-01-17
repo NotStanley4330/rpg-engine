@@ -22,6 +22,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void AddMenus(HWND);
 
+void exitDialog(HWND);
+
 //Menu handler
 HMENU hMenu;
 
@@ -93,12 +95,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 case FILE_MENU_NEW:
                     MessageBeep(MB_ICONERROR);
                 case FILE_MENU_EXIT:
-                    //TODO: break this code out into a function
-                    if (MessageBox(hwnd, "Really quit?", "Quit dialog", MB_OKCANCEL) == IDOK)
-                    {
-                        DestroyWindow(hwnd);
-                    }
-                    // Else: User canceled. Do nothing.
+                    exitDialog(hwnd);
+                    // DO nothing if the user cancelled
                     break;
 
             }
@@ -112,15 +110,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
             return 0;
         case WM_CLOSE:
-            //TODO: break this code out into same function as above
-            if (MessageBox(hwnd, "Really quit?", "Quit dialog", MB_OKCANCEL) == IDOK)
-            {
-                DestroyWindow(hwnd);
-            }
-            // Else: User canceled. Do nothing.
+            exitDialog(hwnd);
+            // If it gets to here the user cancelled exiting, do nothing
             return 0;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+//This function is used to create the exit dialog and handle destruction if necessary
+void exitDialog(HWND hwnd)
+{
+    if (MessageBox(hwnd, "Really quit?", "Quit dialog", MB_OKCANCEL) == IDOK)
+    {
+        DestroyWindow(hwnd);
+    }
 }
 
 void AddMenus(HWND hwnd)
