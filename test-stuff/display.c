@@ -9,83 +9,49 @@
  *
  *********************************************/
 
-#include <stdio.h>
-#include <windows.h>
 
-// Function prototypes
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#include <GL/glut.h>
 
-int main() {
-    // Register window class
-    const char CLASS_NAME[] = "SimpleWindowClass";
 
-    WNDCLASS wc = {0};
+// Clears the current window and draws a triangle.
+void display() {
 
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = CLASS_NAME;
+    // Set every pixel in the frame buffer to the current clear color.
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    RegisterClass(&wc);
+    // Drawing is done by specifying a sequence of vertices.  The way these
+    // vertices are connected (or not connected) depends on the argument to
+    // glBegin.  GL_POLYGON constructs a filled polygon.
+    glBegin(GL_POLYGON);
+    glColor3f(1, 0, 0); glVertex3f(-0.6, -0.75, 0.5);
+    glColor3f(0, 1, 0); glVertex3f(0.6, -0.75, 0.0);
+    glColor3f(0, 0, 1); glVertex3f(0.0, 0.75, 0.0);
+    glEnd();
 
-    // Create the window
-    HWND hwnd = CreateWindowEx(
-            0,                          // Optional window styles
-            CLASS_NAME,                 // Window class
-            "Example Display",            // Window text
-            WS_OVERLAPPEDWINDOW,        // Window style
-
-            // Size and position
-            CW_USEDEFAULT, CW_USEDEFAULT, 1000, 800,
-
-            NULL,       // Parent window
-            NULL,       // Menu
-            GetModuleHandle(NULL), // Instance handle
-            NULL        // Additional application data
-    );
-
-    if (hwnd == NULL) {
-        return 0;
-    }
-
-    // Display the window
-    ShowWindow(hwnd, SW_SHOWDEFAULT);
-    UpdateWindow(hwnd);
-
-    // Message loop
-    //This is where we handle any event messages sent by the OS (ie Mouse Clicks)
-    MSG msg = {0};
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    return 0;
+    // Flush drawing command buffer to make drawing happen as soon as possible.
+    glFlush();
 }
 
-// Window procedure
-//This is how we handle translate messages
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
+// Initializes GLUT, the display mode, and main window; registers callbacks;
+// enters the main event loop.
+int main(int argc, char** argv) {
 
-        case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW+1));
-            EndPaint(hwnd, &ps);
-        }
-            return 0;
-        case WM_CLOSE:
-            if (MessageBox(hwnd, "Really quit?", "Quit dialog", MB_OKCANCEL) == IDOK)
-            {
-                DestroyWindow(hwnd);
-            }
-            // Else: User canceled. Do nothing.
-            return 0;
-    }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    // Use a single buffered window in RGB mode (as opposed to a double-buffered
+    // window or color-index mode).
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+
+    // Position window at (80,80)-(480,380) and give it a title.
+    glutInitWindowPosition(80, 80);
+    glutInitWindowSize(400, 300);
+    glutCreateWindow("A Simple Triangle");
+
+    // Tell GLUT that whenever the main window needs to be repainted that it
+    // should call the function display().
+    glutDisplayFunc(display);
+
+    // Tell GLUT to start reading and processing events.  This function
+    // never returns; the program only exits when the user closes the main
+    // window or kills the process.
+    glutMainLoop();
 }
-
