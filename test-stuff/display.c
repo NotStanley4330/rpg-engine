@@ -12,8 +12,17 @@
 #include <stdio.h>
 #include <windows.h>
 
+//consts for menu items
+#define FILE_MENU_NEW 64
+#define FILE_MENU_OPEN 65
+
 // Function prototypes
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+void AddMenus(HWND);
+
+//Menu handler
+HMENU hMenu;
 
 int main() {
     // Register window class
@@ -66,10 +75,24 @@ int main() {
 //This is how we handle translate messages
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
+        case WM_CREATE:
+            AddMenus(hwnd);
+            return 0;
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
 
+        case WM_COMMAND://this is called when buttons on menus are clicked
+
+            switch(wParam)//this is where we do whatever the button does
+            {
+                case 1:
+                    MessageBeep(MB_OK);
+                    break;
+                case FILE_MENU_NEW:
+                    MessageBeep(MB_ICONERROR);
+            }
+            return 0;
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
@@ -89,3 +112,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+void AddMenus(HWND hwnd)
+{
+    hMenu = CreateMenu();
+
+    //dropdown menus
+    HMENU hFileMenu = CreateMenu();
+
+    //Append items to file menu
+    AppendMenu(hFileMenu, MF_STRING, FILE_MENU_NEW, "New");
+    AppendMenu(hFileMenu, MF_STRING, FILE_MENU_OPEN, "Open");
+
+    //The append calls are where we append top level menus to the bar
+    AppendMenu(hMenu, MF_POPUP,(UINT_PTR)hFileMenu,"File");
+    AppendMenu(hMenu, MF_STRING,1,"Help");
+
+
+    //This is where the menus are bound to the menu
+    SetMenu(hwnd, hMenu);
+}
