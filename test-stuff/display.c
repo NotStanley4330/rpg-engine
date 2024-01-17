@@ -15,6 +15,7 @@
 //consts for menu items
 #define FILE_MENU_NEW 64
 #define FILE_MENU_OPEN 65
+#define FILE_MENU_EXIT 66
 
 // Function prototypes
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -91,6 +92,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     break;
                 case FILE_MENU_NEW:
                     MessageBeep(MB_ICONERROR);
+                case FILE_MENU_EXIT:
+                    //TODO: break this code out into a function
+                    if (MessageBox(hwnd, "Really quit?", "Quit dialog", MB_OKCANCEL) == IDOK)
+                    {
+                        DestroyWindow(hwnd);
+                    }
+                    // Else: User canceled. Do nothing.
+                    break;
+
             }
             return 0;
         case WM_PAINT:
@@ -102,6 +112,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
             return 0;
         case WM_CLOSE:
+            //TODO: break this code out into same function as above
             if (MessageBox(hwnd, "Really quit?", "Quit dialog", MB_OKCANCEL) == IDOK)
             {
                 DestroyWindow(hwnd);
@@ -122,6 +133,8 @@ void AddMenus(HWND hwnd)
     //Append items to file menu
     AppendMenu(hFileMenu, MF_STRING, FILE_MENU_NEW, "New");
     AppendMenu(hFileMenu, MF_STRING, FILE_MENU_OPEN, "Open");
+    AppendMenu(hFileMenu, MF_SEPARATOR, NULL, NULL);
+    AppendMenu(hFileMenu, MF_STRING, FILE_MENU_EXIT, "Exit");
 
     //The append calls are where we append top level menus to the bar
     AppendMenu(hMenu, MF_POPUP,(UINT_PTR)hFileMenu,"File");
