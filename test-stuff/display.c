@@ -11,21 +11,31 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <winuser.h>
+
 
 //consts for menu items
 #define FILE_MENU_NEW 64
 #define FILE_MENU_OPEN 65
 #define FILE_MENU_EXIT 66
+#define EDIT_WINDOW_BUTTON 67
 
 // Function prototypes
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void AddMenus(HWND);
-
+void AddControls(HWND);
 void exitDialog(HWND);
+
+void AddCatPicture(HWND);
+
+
 
 //Menu handler
 HMENU hMenu;
+
+//window handlers
+HWND hXCoord;
 
 int main() {
     // Register window class
@@ -80,13 +90,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     switch (uMsg) {
         case WM_CREATE:
             AddMenus(hwnd);
+            AddControls(hwnd);
+            AddCatPicture(hwnd);
+
             return 0;
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
 
         case WM_COMMAND://this is called when buttons on menus are clicked
-
             switch(wParam)//this is where we do whatever the button does
             {
                 case 1:
@@ -101,9 +113,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     exitDialog(hwnd);
                     // DO nothing if the user cancelled
                     break;
+                case EDIT_WINDOW_BUTTON:
+                {
+                    //printf("Done correctly!\n");
 
+                    //This code pulls the number from the hXCoord edit control and uses it to change the window title
+                    int xLen = GetWindowTextLength(hXCoord);
+                    char* xCoord = (char*)malloc((xLen + 1) * sizeof(char));
+                    GetWindowText(hXCoord, xCoord, xLen + 1);
+                    SetWindowText(hwnd, xCoord);
+                    xCoord[xLen + 1] = '\0';
+
+
+                    break;
+                }
             }
             return 0;
+//        case WM_KEYDOWN:
+//
+//            switch(wParam)
+//            {
+//                case VK_RETURN:
+//                {
+//                    int buffLength = GetWindowTextLength(hXCoord);
+//                    char buff[buffLength];
+//                    GetWindowText(hXCoord, buff, buffLength);
+//                    printf("%s\n", buff);
+//                    break;
+//                }
+//                default:
+//
+//            }
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
@@ -130,24 +170,79 @@ void exitDialog(HWND hwnd)
     }
 }
 
+//This function is used for creating all the menus at the top bar
 void AddMenus(HWND hwnd)
 {
     hMenu = CreateMenu();
 
     //dropdown menus
     HMENU hFileMenu = CreateMenu();
+    HMENU hEditMenu = CreateMenu();
+    HMENU hEditSubMenu = CreateMenu();
 
     //Append items to file menu
     AppendMenu(hFileMenu, MF_STRING, FILE_MENU_NEW, "New");
     AppendMenu(hFileMenu, MF_STRING, FILE_MENU_OPEN, "Open");
-    AppendMenu(hFileMenu, MF_SEPARATOR, NULL, NULL);
+    AppendMenu(hFileMenu, MF_SEPARATOR, 0, NULL);
     AppendMenu(hFileMenu, MF_STRING, FILE_MENU_EXIT, "Exit");
+
+    //Append items to the Edit menu
+    AppendMenu(hEditMenu, MF_POPUP, (UINT_PTR)hEditSubMenu, "Window Name");
+
+    //Append to the Edit submenu
+    AppendMenu(hEditSubMenu, MF_STRING, EDIT_WINDOW_BUTTON, "DO IT!");
 
     //The append calls are where we append top level menus to the bar
     AppendMenu(hMenu, MF_POPUP,(UINT_PTR)hFileMenu,"File");
+    AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hEditMenu, "Edit");
     AppendMenu(hMenu, MF_STRING,1,"Help");
 
 
     //This is where the menus are bound to the menu
     SetMenu(hwnd, hMenu);
+}
+
+void AddControls(HWND hwnd)
+{
+    CreateWindowEx(
+            0,
+            "Static",
+            "Enter x coordinate here:",
+            WS_VISIBLE | WS_CHILD,
+
+            100,
+            100,
+            160,
+            20,
+
+            hwnd,
+            NULL,
+            NULL,
+            NULL
+            );
+
+    hXCoord = CreateWindowEx(
+            0,
+            "Edit",
+            "0",
+            WS_VISIBLE | WS_CHILD | ES_NUMBER,
+
+            160,
+            120,
+            80,
+            20,
+
+            hwnd,
+            NULL,
+            NULL,
+            NULL
+
+            );
+
+}
+
+
+void AddCatPicture(HWND hwnd)
+{
+
 }
