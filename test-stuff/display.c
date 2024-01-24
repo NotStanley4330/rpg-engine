@@ -129,21 +129,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
             return 0;
-//        case WM_KEYDOWN:
-//
-//            switch(wParam)
-//            {
-//                case VK_RETURN:
-//                {
-//                    int buffLength = GetWindowTextLength(hXCoord);
-//                    char buff[buffLength];
-//                    GetWindowText(hXCoord, buff, buffLength);
-//                    printf("%s\n", buff);
-//                    break;
-//                }
-//                default:
-//
-//            }
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
