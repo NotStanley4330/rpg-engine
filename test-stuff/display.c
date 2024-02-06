@@ -27,7 +27,7 @@ void AddMenus(HWND);
 void AddControls(HWND);
 void exitDialog(HWND);
 
-void AddCatPicture(HWND);
+void loadImages();
 
 
 
@@ -36,6 +36,12 @@ HMENU hMenu;
 
 //window handlers
 HWND hXCoord;
+HWND hConfCoords;
+
+
+//Image Handlers
+HBITMAP hLogoImage, hCatImage;
+HWND hLogo;
 
 int main() {
     // Register window class
@@ -89,9 +95,9 @@ int main() {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
+            loadImages();
             AddMenus(hwnd);
             AddControls(hwnd);
-            AddCatPicture(hwnd);
 
             return 0;
         case WM_DESTROY:
@@ -175,7 +181,7 @@ void AddMenus(HWND hwnd)
     AppendMenu(hEditMenu, MF_POPUP, (UINT_PTR)hEditSubMenu, "Window Name");
 
     //Append to the Edit submenu
-    AppendMenu(hEditSubMenu, MF_STRING, EDIT_WINDOW_BUTTON, "DO IT!");
+    AppendMenu(hEditSubMenu, MF_STRING, 0, "DO IT!"); //Should not change the window name now
 
     //The append calls are where we append top level menus to the bar
     AppendMenu(hMenu, MF_POPUP,(UINT_PTR)hFileMenu,"File");
@@ -210,9 +216,9 @@ void AddControls(HWND hwnd)
             0,
             "Edit",
             "0",
-            WS_VISIBLE | WS_CHILD | ES_NUMBER,
+            WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER,
 
-            160,
+            140,
             120,
             80,
             20,
@@ -224,10 +230,61 @@ void AddControls(HWND hwnd)
 
             );
 
+    hConfCoords = CreateWindowEx(
+                0,
+                "Button",
+                "Change Coords",
+                WS_VISIBLE | WS_CHILD,
+
+                120,
+                160,
+                120,
+                20,
+
+                hwnd,
+                (HMENU)EDIT_WINDOW_BUTTON,
+                NULL,
+                NULL
+            );
+    hLogo = CreateWindowW(
+            L"Static",
+            NULL,
+            WS_VISIBLE | WS_CHILD | SS_BITMAP,
+
+            300,
+            100,
+            60,
+            60,
+
+            hwnd,
+            NULL,
+            NULL,
+            NULL
+    );
+
+    //send a message to the logo controller
+    SendMessage(hLogo, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hCatImage);
+
 }
 
 
-void AddCatPicture(HWND hwnd)
+void loadImages()
 {
 
+    //May require a 25 bit depth bitmap?!?
+    hCatImage = (HBITMAP)LoadImageW(
+            NULL,
+            L"C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\cat2.bmp",
+            IMAGE_BITMAP,
+            0,
+            0,
+            LR_LOADFROMFILE
+            );
+
+    if (hCatImage == NULL)
+    {
+        DWORD dwError = GetLastError();
+        // You can print the error code or use it for further analysis
+        printf("LoadImage failed with error code: %lu\n", dwError);
+    }
 }
