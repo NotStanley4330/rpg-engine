@@ -20,16 +20,26 @@
 #define FILE_MENU_EXIT 66
 #define EDIT_WINDOW_BUTTON 67
 
+//consts for map position buttons
+#define X_COORD_INCREASE 20
+#define X_COORD_DECREASE 21
+#define Y_COORD_INCREASE 22
+#define Y_COORD_DECREASE 23
+
 // Function prototypes
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void AddMenus(HWND);
 void AddControls(HWND);
+void AddMapControls(HWND);
 void exitDialog(HWND);
+
 
 void loadImages();
 
-
+//globals - I know this is bad practice but screw passing around these values
+int catPosX;
+int catPosY;
 
 //Menu handler
 HMENU hMenu;
@@ -37,6 +47,9 @@ HMENU hMenu;
 //window handlers
 HWND hXCoord;
 HWND hConfCoords;
+
+//window handlers for position buttons
+HWND hYIncrease, hYDecrease, hXIncrease, hXDecrease;
 
 
 //Image Handlers
@@ -98,6 +111,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             loadImages();
             AddMenus(hwnd);
             AddControls(hwnd);
+            AddMapControls(hwnd);
 
             return 0;
         case WM_DESTROY:
@@ -246,6 +260,9 @@ void AddControls(HWND hwnd)
                 NULL,
                 NULL
             );
+
+
+
     hLogo = CreateWindowW(
             L"Static",
             NULL,
@@ -264,6 +281,11 @@ void AddControls(HWND hwnd)
 
     //send a message to the logo controller
     SendMessage(hLogo, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hCatImage);
+
+}
+
+void AddMapControls(HWND hwnd)
+{
 
 }
 
