@@ -18,7 +18,7 @@
 #define FILE_MENU_NEW 64
 #define FILE_MENU_OPEN 65
 #define FILE_MENU_EXIT 66
-#define EDIT_WINDOW_BUTTON 67
+#define COORD_CONFIRM_BUTTON 67
 
 //consts for map position buttons
 #define X_COORD_INCREASE 20
@@ -48,7 +48,7 @@ int catPosX, catPosY, catWidth, catHeight;
 HMENU hMenu;
 
 //window handlers
-HWND hXCoord;
+HWND hXCoord, hYCoord;
 HWND hConfCoords;
 
 //window handlers for position buttons
@@ -57,7 +57,7 @@ HWND hMinusButton, hPlusButton;
 
 
 //Image Handlers
-HBITMAP hLogoImage, hCatImage;
+HBITMAP hCatImage;
 HBITMAP hDownArrow, hUpArrow, hLeftArrow, hRightArrow;
 HBITMAP hMinus, hPlus;
 
@@ -69,10 +69,10 @@ int main() {
     const char CLASS_NAME[] = "SimpleWindowClass";
 
     //initialize our cat positions
-    catPosX = 450;
-    catPosY = 300;
-    catWidth = 90;
-    catHeight = 90;
+    catPosX = 400;
+    catPosY = 250;
+    catWidth = 150;
+    catHeight = 150;
 
     WNDCLASS wc = {0};
 
@@ -147,18 +147,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     exitDialog(hwnd);
                     // DO nothing if the user cancelled
                     break;
-                case EDIT_WINDOW_BUTTON:
+                case COORD_CONFIRM_BUTTON:
                 {
-                    //printf("Done correctly!\n");
-
-                    //This code pulls the number from the hXCoord edit control and uses it to change the window title
+                    //pulls the number from the hXCoord edit control
                     int xLen = GetWindowTextLength(hXCoord);
                     char* xCoord = (char*)malloc((xLen + 1) * sizeof(char));
                     GetWindowText(hXCoord, xCoord, xLen + 1);
-                    SetWindowText(hwnd, xCoord);
-                    xCoord[xLen + 1] = '\0';
-
-
+                    catPosX = atoi(xCoord);
+                    //let's do the same for the y coord control
+                    int yLen = GetWindowTextLength(hYCoord);
+                    char* yCoord = (char*)malloc((yLen + 1) * sizeof(char));
+                    GetWindowText(hYCoord, yCoord, yLen + 1);
+                    catPosY = atoi(yCoord);
+                    //now move the cat to these coordiantes
+                    MoveAndResizeCatImage();
                     break;
                 }
                 case Y_COORD_INCREASE:
@@ -263,15 +265,16 @@ void AddMenus(HWND hwnd)
 
 void AddControls(HWND hwnd)
 {
+    //Create the static text for the coord manual controls
     CreateWindowEx(
             0,
             "Static",
-            "Enter x coordinate here:",
+            "x:",
             WS_VISIBLE | WS_CHILD,
 
             100,
             100,
-            160,
+            20,
             20,
 
             hwnd,
@@ -280,15 +283,33 @@ void AddControls(HWND hwnd)
             NULL
             );
 
+    CreateWindowEx(
+            0,
+            "Static",
+            "y:",
+            WS_VISIBLE | WS_CHILD,
+
+            160,
+            100,
+            20,
+            20,
+
+            hwnd,
+            NULL,
+            NULL,
+            NULL
+    );
+
+    //create the x and Y controls
     hXCoord = CreateWindowEx(
             0,
             "Edit",
-            "0",
+            "400",
             WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER,
 
-            140,
+            100,
             120,
-            80,
+            50,
             20,
 
             hwnd,
@@ -297,6 +318,26 @@ void AddControls(HWND hwnd)
             NULL
 
             );
+
+    hYCoord = CreateWindowEx(
+            0,
+            "Edit",
+            "250",
+            WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER,
+
+            160,
+            120,
+            50,
+            20,
+
+            hwnd,
+            NULL,
+            NULL,
+            NULL
+
+    );
+
+
 
     hConfCoords = CreateWindowEx(
                 0,
@@ -310,7 +351,7 @@ void AddControls(HWND hwnd)
                 20,
 
                 hwnd,
-                (HMENU)EDIT_WINDOW_BUTTON,
+                (HMENU)COORD_CONFIRM_BUTTON,
                 NULL,
                 NULL
             );
@@ -534,6 +575,7 @@ void loadImages()
 
 void MoveAndResizeCatImage()
 {
+    //set the size and position of the cat
     SetWindowPos(
             hCat,
             HWND_TOP,
@@ -543,4 +585,8 @@ void MoveAndResizeCatImage()
             catHeight,
             SWP_NOCOPYBITS
     );
+
+
+
+
 }
