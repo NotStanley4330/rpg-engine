@@ -33,13 +33,12 @@ void AddMenus(HWND);
 void AddControls(HWND);
 void AddMapControls(HWND);
 void exitDialog(HWND);
-
+void MoveCatImage();
 
 void loadImages();
 
 //globals - I know this is bad practice but screw passing around these values
-int catPosX;
-int catPosY;
+int catPosX, catPosY, catWidth, catHeight;
 
 //Menu handler
 HMENU hMenu;
@@ -65,6 +64,8 @@ int main() {
     //initialize our cat positions
     catPosX = 300;
     catPosY = 100;
+    catWidth = 60;
+    catHeight = 60;
 
     WNDCLASS wc = {0};
 
@@ -155,7 +156,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
                 case Y_COORD_INCREASE:
                 {
-
+                    //TODO: make this a broken out function to avoid repeated code
+                    catPosY += 10;
+                    MoveCatImage();
+                    break;
+                }
+                case Y_COORD_DECREASE:
+                {
+                    catPosY -= 10;
+                    MoveCatImage();
                     break;
                 }
             }
@@ -282,8 +291,8 @@ void AddControls(HWND hwnd)
 
             catPosX,
             catPosY,
-            60,
-            60,
+            catWidth,
+            catHeight,
 
             hwnd,
             NULL,
@@ -303,15 +312,33 @@ void AddControls(HWND hwnd)
             60,
 
             hwnd,
+            (HMENU)Y_COORD_INCREASE,
             NULL,
+            NULL
+    );
+
+    hUpButton = CreateWindowEx(
+            0,
+            "Button",
+            NULL,
+            WS_VISIBLE | WS_CHILD | BS_BITMAP,
+
+            450,
+            50,
+            40,
+            60,
+
+            hwnd,
+            (HMENU)Y_COORD_DECREASE,
             NULL,
             NULL
     );
 
 
-    //send a message to the logo controller
+    //send messages to the controllers
     SendMessage(hCat, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hCatImage);
     SendMessage(hDownButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hDownArrow);
+    SendMessage(hUpButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hUpArrow);
 
 }
 
@@ -343,10 +370,27 @@ void loadImages()
             LR_LOADFROMFILE
     );
 
-    if (hCatImage == NULL)
-    {
-        DWORD dwError = GetLastError();
-        // You can print the error code or use it for further analysis
-        printf("LoadImage failed with error code: %lu\n", dwError);
-    }
+    hUpArrow = (HBITMAP)LoadImage(
+            NULL,
+            "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\up_arrow.bmp",
+            IMAGE_BITMAP,
+            60,
+            60,
+            LR_LOADFROMFILE
+    );
+
+
+}
+
+void MoveCatImage()
+{
+    SetWindowPos(
+            hCat,
+            NULL,
+            catPosX,
+            catPosY,
+            catWidth,
+            catHeight,
+            SWP_NOSIZE
+    );
 }
