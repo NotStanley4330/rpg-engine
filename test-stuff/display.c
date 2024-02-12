@@ -54,11 +54,17 @@ HWND hYIncrease, hYDecrease, hXIncrease, hXDecrease;
 
 //Image Handlers
 HBITMAP hLogoImage, hCatImage;
-HWND hLogo;
+HBITMAP hDownArrow, hUpArrow, hLeftArrow, hRightArrow;
+HWND hDownButton, hUpButton, hLeftButton, hRightButton;
+HWND hCat;
 
 int main() {
     // Register window class
     const char CLASS_NAME[] = "SimpleWindowClass";
+
+    //initialize our cat positions
+    catPosX = 300;
+    catPosY = 100;
 
     WNDCLASS wc = {0};
 
@@ -144,6 +150,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowText(hwnd, xCoord);
                     xCoord[xLen + 1] = '\0';
 
+
+                    break;
+                }
+                case Y_COORD_INCREASE:
+                {
 
                     break;
                 }
@@ -262,14 +273,15 @@ void AddControls(HWND hwnd)
             );
 
 
-
-    hLogo = CreateWindowW(
-            L"Static",
+    //here is where we load in images
+    hCat = CreateWindowEx(
+            0,
+            "Static",
             NULL,
             WS_VISIBLE | WS_CHILD | SS_BITMAP,
 
-            300,
-            100,
+            catPosX,
+            catPosY,
             60,
             60,
 
@@ -279,8 +291,27 @@ void AddControls(HWND hwnd)
             NULL
     );
 
+    hDownButton = CreateWindowEx(
+            0,
+            "Button",
+            NULL,
+            WS_VISIBLE | WS_CHILD | BS_BITMAP,
+
+            450,
+            450,
+            40,
+            60,
+
+            hwnd,
+            NULL,
+            NULL,
+            NULL
+    );
+
+
     //send a message to the logo controller
-    SendMessage(hLogo, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hCatImage);
+    SendMessage(hCat, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hCatImage);
+    SendMessage(hDownButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hDownArrow);
 
 }
 
@@ -293,15 +324,24 @@ void AddMapControls(HWND hwnd)
 void loadImages()
 {
 
-    //May require a 25 bit depth bitmap?!?
-    hCatImage = (HBITMAP)LoadImageW(
+    //May require a 24 bit depth bitmap?!?
+    hCatImage = (HBITMAP)LoadImage(
             NULL,
-            L"C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\cat2.bmp",
+            "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\cat2.bmp",
             IMAGE_BITMAP,
             0,
             0,
             LR_LOADFROMFILE
             );
+
+    hDownArrow = (HBITMAP)LoadImage(
+            NULL,
+            "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\down_arrow.bmp",
+            IMAGE_BITMAP,
+            60,
+            60,
+            LR_LOADFROMFILE
+    );
 
     if (hCatImage == NULL)
     {
