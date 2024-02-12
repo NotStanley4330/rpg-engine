@@ -26,6 +26,10 @@
 #define Y_COORD_INCREASE 22
 #define Y_COORD_DECREASE 23
 
+//consts for zoom in and out buttons
+#define ZOOM_OUT 24
+#define ZOOM_IN 25
+
 // Function prototypes
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -33,7 +37,7 @@ void AddMenus(HWND);
 void AddControls(HWND);
 void AddMapControls(HWND);
 void exitDialog(HWND);
-void MoveCatImage();
+void MoveAndResizeCatImage();
 
 void loadImages();
 
@@ -48,13 +52,16 @@ HWND hXCoord;
 HWND hConfCoords;
 
 //window handlers for position buttons
-HWND hYIncrease, hYDecrease, hXIncrease, hXDecrease;
+HWND hDownButton, hUpButton, hLeftButton, hRightButton;
+HWND hMinusButton, hPlusButton;
 
 
 //Image Handlers
 HBITMAP hLogoImage, hCatImage;
 HBITMAP hDownArrow, hUpArrow, hLeftArrow, hRightArrow;
-HWND hDownButton, hUpButton, hLeftButton, hRightButton;
+HBITMAP hMinus, hPlus;
+
+//CAT
 HWND hCat;
 
 int main() {
@@ -62,10 +69,10 @@ int main() {
     const char CLASS_NAME[] = "SimpleWindowClass";
 
     //initialize our cat positions
-    catPosX = 300;
-    catPosY = 100;
-    catWidth = 60;
-    catHeight = 60;
+    catPosX = 450;
+    catPosY = 300;
+    catWidth = 90;
+    catHeight = 90;
 
     WNDCLASS wc = {0};
 
@@ -83,7 +90,7 @@ int main() {
             WS_OVERLAPPEDWINDOW,        // Window style
 
             // Size and position
-            CW_USEDEFAULT, CW_USEDEFAULT, 1000, 800,
+            CW_USEDEFAULT, CW_USEDEFAULT, 1400, 800,
 
             NULL,       // Parent window
             NULL,       // Menu
@@ -156,15 +163,42 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
                 case Y_COORD_INCREASE:
                 {
-                    //TODO: make this a broken out function to avoid repeated code
                     catPosY += 10;
-                    MoveCatImage();
+                    MoveAndResizeCatImage();
                     break;
                 }
                 case Y_COORD_DECREASE:
                 {
                     catPosY -= 10;
-                    MoveCatImage();
+                    MoveAndResizeCatImage();
+                    break;
+                }
+                case X_COORD_INCREASE:
+                {
+                    catPosX += 10;
+                    MoveAndResizeCatImage();
+                    break;
+                }
+                case X_COORD_DECREASE:
+                {
+                    catPosX -= 10;
+                    MoveAndResizeCatImage();
+                    break;
+                }
+                case ZOOM_OUT:
+                {
+                    //Decrease cat size by 10%
+                    catHeight = (int)(catHeight * 0.9);
+                    catWidth = (int)(catWidth * 0.9);
+                    MoveAndResizeCatImage();
+                    break;
+                }
+                case ZOOM_IN:
+                {
+                    //Increase cat size by 10%
+                    catHeight = (int)(catHeight * 1.1);
+                    catWidth = (int)(catWidth *1.1);
+                    MoveAndResizeCatImage();
                     break;
                 }
             }
@@ -334,11 +368,85 @@ void AddControls(HWND hwnd)
             NULL
     );
 
+    hRightButton = CreateWindowEx(
+            0,
+            "Button",
+            NULL,
+            WS_VISIBLE | WS_CHILD | BS_BITMAP,
+
+            650,
+            250,
+            60,
+            40,
+
+            hwnd,
+            (HMENU)X_COORD_INCREASE,
+            NULL,
+            NULL
+    );
+
+    hLeftButton = CreateWindowEx(
+            0,
+            "Button",
+            NULL,
+            WS_VISIBLE | WS_CHILD | BS_BITMAP,
+
+            250,
+            250,
+            60,
+            40,
+
+            hwnd,
+            (HMENU)X_COORD_DECREASE,
+            NULL,
+            NULL
+    );
+
+    hMinusButton = CreateWindowEx(
+            0,
+            "Button",
+            NULL,
+            WS_VISIBLE | WS_CHILD | BS_BITMAP,
+
+            350,
+            465,
+            60,
+            30,
+
+            hwnd,
+            (HMENU)ZOOM_OUT,
+            NULL,
+            NULL
+    );
+
+    hPlusButton = CreateWindowEx(
+            0,
+            "Button",
+            NULL,
+            WS_VISIBLE | WS_CHILD | BS_BITMAP,
+
+            530,
+            465,
+            30,
+            30,
+
+            hwnd,
+            (HMENU)ZOOM_IN,
+            NULL,
+            NULL
+    );
+
+
+
 
     //send messages to the controllers
     SendMessage(hCat, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hCatImage);
     SendMessage(hDownButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hDownArrow);
     SendMessage(hUpButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hUpArrow);
+    SendMessage(hRightButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hRightArrow);
+    SendMessage(hLeftButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hLeftArrow);
+    SendMessage(hMinusButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hMinus);
+    SendMessage(hPlusButton, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hPlus);
 
 }
 
@@ -352,12 +460,19 @@ void loadImages()
 {
 
     //May require a 24 bit depth bitmap?!?
+    /********************************************************************************************************
+    * Will eventually want to replace this cat logic because I don't think LoadImage supports transparency  *
+    * Also think that It would be impractical to render the game world using this method, will probably     *
+    * want to use BitBlt and custom load in the graphics somehow. Will further research what this requires. *
+    * I also want to probably put all that functionality in that file, this file should be purely for       *
+    * window controls for the main window. If I create sub-windows I probably want their control broken out *
+    *********************************************************************************************************/
     hCatImage = (HBITMAP)LoadImage(
             NULL,
             "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\cat2.bmp",
             IMAGE_BITMAP,
-            0,
-            0,
+            catWidth,
+            catHeight,
             LR_LOADFROMFILE
             );
 
@@ -379,18 +494,53 @@ void loadImages()
             LR_LOADFROMFILE
     );
 
+    hRightArrow = (HBITMAP)LoadImage(
+            NULL,
+            "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\right_arrow.bmp",
+            IMAGE_BITMAP,
+            60,
+            60,
+            LR_LOADFROMFILE
+    );
+
+    hLeftArrow = (HBITMAP)LoadImage(
+            NULL,
+            "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\left_arrow.bmp",
+            IMAGE_BITMAP,
+            60,
+            60,
+            LR_LOADFROMFILE
+    );
+
+    hMinus = (HBITMAP)LoadImage(
+            NULL,
+            "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\minus_button.bmp",
+            IMAGE_BITMAP,
+            30,
+            15,
+            LR_LOADFROMFILE
+    );
+    hPlus = (HBITMAP)LoadImage(
+            NULL,
+            "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\plus_button.bmp",
+            IMAGE_BITMAP,
+            30,
+            30,
+            LR_LOADFROMFILE
+    );
+
 
 }
 
-void MoveCatImage()
+void MoveAndResizeCatImage()
 {
     SetWindowPos(
             hCat,
-            NULL,
+            HWND_TOP,
             catPosX,
             catPosY,
             catWidth,
             catHeight,
-            SWP_NOSIZE
+            SWP_NOCOPYBITS
     );
 }
