@@ -60,6 +60,7 @@ HWND hMinusButton, hPlusButton;
 HBITMAP hCatImage;
 HBITMAP hDownArrow, hUpArrow, hLeftArrow, hRightArrow;
 HBITMAP hMinus, hPlus;
+HBITMAP hGameWorldView;
 
 //CAT
 HWND hCat;
@@ -126,6 +127,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             AddMenus(hwnd);
             AddControls(hwnd);
             AddMapControls(hwnd);
+
+            //we are gonna test having a bitmap that displays the game world
+            hGameWorldView = (HBITMAP)LoadImage(
+                    NULL,
+                    "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\world_background.bmp",
+                    IMAGE_BITMAP,
+                    400,
+                    400,
+                    LR_LOADFROMFILE
+            );
 
             return 0;
         case WM_DESTROY:
@@ -208,8 +219,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
+            //adding in this stuff to test out bitblt
+            BITMAP bitmap;
+            HDC hdcMem;
+            HGDIOBJ oldBitmap;
             HDC hdc = BeginPaint(hwnd, &ps);
             FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW+1));
+            //bitmap printing code
+            hdcMem = CreateCompatibleDC(hdc);
+            oldBitmap = SelectObject(hdcMem, hGameWorldView);
+            GetObject(hGameWorldView, sizeof(BITMAP), &bitmap);
+            BitBlt(hdc, 700, 400, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            SelectObject(hdcMem, oldBitmap);
+            DeleteDC(hdcMem);
+
             EndPaint(hwnd, &ps);
         }
             return 0;
@@ -585,6 +608,8 @@ void MoveAndResizeCatImage()
             catHeight,
             SWP_NOCOPYBITS
     );
+
+    //will want to use InvalidateRect to force a redraw I think
 
 
 
