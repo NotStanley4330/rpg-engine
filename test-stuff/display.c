@@ -86,7 +86,7 @@ int main() {
     const char CLASS_NAME[] = "SimpleWindowClass";
 
     //initialize our cat positions
-    catPosX = 400;
+    catPosX = 1000;
     catPosY = 250;
     catWidth = 150;
     catHeight = 150;
@@ -173,7 +173,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     400,
                     LR_LOADFROMFILE
             );
-            //lets load in some test tiles so that we can work on bitblt
+            //let's load in some test tiles so that we can work on bitblt
 
             return 0;
         case WM_DESTROY:
@@ -255,7 +255,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_PAINT:
         {
-            //TODO: MOVE ALL THIS STUFF TO THE MAP TILES FILE
+            //TODO: MOVE ALL THIS STUFF TO THE MAP TILES DRAW FUNCTION
             PAINTSTRUCT ps;
             // Adding in this stuff to test out bitblt
             BITMAP bitmap;
@@ -272,7 +272,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
-            // Draw hcoastTile
+            // Draw hcoastTile thrice
             hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hcoastTile
             oldBitmap = SelectObject(hdcMem, bitmaps[0].image);
             if (GetObject(bitmaps[0].image, sizeof(BITMAP), &bitmap) == 0) {
@@ -280,6 +280,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 // Handle the error accordingly
             }
             BitBlt(hdc, WORLD_SCREEN_POS_X + 128, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X + 128, WORLD_SCREEN_POS_Y + 128, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X + 128, WORLD_SCREEN_POS_Y + 256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
@@ -291,10 +293,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 // Handle the error accordingly
             }
             BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y+128, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
-            // Draw hOceanTile
+            // Draw hOceanTile a few times
             hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hDirtTile
             oldBitmap = SelectObject(hdcMem, bitmaps[2].image);
             if (GetObject(bitmaps[2].image, sizeof(BITMAP), &bitmap) == 0) {
@@ -302,6 +306,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 // Handle the error accordingly
             }
             BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y+128, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X+384, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X+384, WORLD_SCREEN_POS_Y+128, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X+384, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
