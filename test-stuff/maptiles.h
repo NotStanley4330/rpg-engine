@@ -9,14 +9,27 @@
 
 #define DEFAULT_TILE_SIZE 128
 
-struct MapTile
+struct Bitmap
 {
-    int xPos;
-    int yPos;
-    HBITMAP bitmap;
+    char* name;//name of the bitmap for referencing quickly
+    char* location;//file location
+    HBITMAP image;//the actual HBITMAP object
 };
 
+struct MapTile
+{
+    int xPos;//x position in the map
+    int yPos;//y position in the map
+    struct Bitmap* bitmap; //We want a pointer to the original HBITMAP to avoid storing tons of duplicate HBITMAP objects
+};
+
+
+
+void LoadBitmaps(struct Bitmap*, int);//this function will load in all the bitmaps for use in the editor
+
 void DrawMapTiles(struct MapTile**, int, int);
+
+void LoadTileImages();
 
 
 #endif //RPG_ENGINE_MAPTILES_H

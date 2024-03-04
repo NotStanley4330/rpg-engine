@@ -77,6 +77,8 @@ HBITMAP hCoastTile, hDirtTile, hOceanTile;
 //CAT
 HWND hCat;
 
+//ALL THE BITMAPS
+struct Bitmap bitmaps[3];
 
 
 int main() {
@@ -93,6 +95,20 @@ int main() {
     //eventually we want to have these loaded in from a custom file so that we can preserve progress between sessions
     worldPosX = 350;
     worldPosY = 150;
+
+    //here we should load in some bitmaps
+
+    //This is just temporary to test the functionality of the loadBitmap functionality
+    bitmaps[0].name = "TILE_COAST";
+    bitmaps[0].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile.bmp";
+    bitmaps[1].name = "TILE_DIRT";
+    bitmaps[1].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\dirt_tile.bmp";
+    bitmaps[2].name = "TILE_OCEAN";
+    bitmaps[2].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\ocean_tile.bmp";
+    LoadBitmaps(bitmaps, 3);
+
+
+
 
 
     WNDCLASS wc = {0};
@@ -148,8 +164,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             AddControls(hwnd);
             AddMapControls(hwnd);
 
-            //TODO: Move these declarations into loadButtonImages or similar
-            //TODO: Make the texture loads an array of HBITMAPS
             //we are gonna test having a bitmap that displays the game world
             hGameWorldView = (HBITMAP)LoadImage(
                     NULL,
@@ -160,30 +174,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     LR_LOADFROMFILE
             );
             //lets load in some test tiles so that we can work on bitblt
-            hCoastTile = (HBITMAP)LoadImage(
-                    NULL,
-                    "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile.bmp",
-                    IMAGE_BITMAP,
-                    128,
-                    128,
-                    LR_LOADFROMFILE
-                    );
-            hDirtTile = (HBITMAP)LoadImage(
-                    NULL,
-                    "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\dirt_tile.bmp",
-                    IMAGE_BITMAP,
-                    128,
-                    128,
-                    LR_LOADFROMFILE
-                    );
-            hOceanTile = (HBITMAP)LoadImage(
-                    NULL,
-                    "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\ocean_tile.bmp",
-                    IMAGE_BITMAP,
-                    128,
-                    128,
-                    LR_LOADFROMFILE
-            );
 
             return 0;
         case WM_DESTROY:
@@ -265,6 +255,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_PAINT:
         {
+            //TODO: MOVE ALL THIS STUFF TO THE MAP TILES FILE
             PAINTSTRUCT ps;
             // Adding in this stuff to test out bitblt
             BITMAP bitmap;
@@ -283,8 +274,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             // Draw hcoastTile
             hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hcoastTile
-            oldBitmap = SelectObject(hdcMem, hCoastTile);
-            if (GetObject(hCoastTile, sizeof(BITMAP), &bitmap) == 0) {
+            oldBitmap = SelectObject(hdcMem, bitmaps[0].image);
+            if (GetObject(bitmaps[0].image, sizeof(BITMAP), &bitmap) == 0) {
                 // Error retrieving bitmap information
                 // Handle the error accordingly
             }
@@ -294,8 +285,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             // Draw hDirtTile
             hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hDirtTile
-            oldBitmap = SelectObject(hdcMem, hDirtTile);
-            if (GetObject(hDirtTile, sizeof(BITMAP), &bitmap) == 0) {
+            oldBitmap = SelectObject(hdcMem, bitmaps[1].image);
+            if (GetObject(bitmaps[1].image, sizeof(BITMAP), &bitmap) == 0) {
                 // Error retrieving bitmap information
                 // Handle the error accordingly
             }
@@ -305,8 +296,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             // Draw hOceanTile
             hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hDirtTile
-            oldBitmap = SelectObject(hdcMem, hOceanTile);
-            if (GetObject(hOceanTile, sizeof(BITMAP), &bitmap) == 0) {
+            oldBitmap = SelectObject(hdcMem, bitmaps[2].image);
+            if (GetObject(bitmaps[2].image, sizeof(BITMAP), &bitmap) == 0) {
                 // Error retrieving bitmap information
                 // Handle the error accordingly
             }
