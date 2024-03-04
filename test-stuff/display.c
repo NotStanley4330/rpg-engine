@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <winuser.h>
+#include "maptiles.h"
 
 
 //consts for menu items
@@ -30,6 +31,13 @@
 #define ZOOM_OUT 24
 #define ZOOM_IN 25
 
+//consts for world screen position, as well as size
+#define WORLD_SCREEN_POS_X 350
+#define WORLD_SCREEN_POS_Y 150
+#define WORLD_SCREEN_WIDTH_TILES 5
+#define WORLD_SCREEN_HEIGHT_TILES 5
+
+
 // Function prototypes
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -39,10 +47,13 @@ void AddMapControls(HWND);
 void exitDialog(HWND);
 void MoveAndResizeCatImage();
 
-void loadImages();
+void loadButtonImages();
 
 //globals - I know this is bad practice but screw passing around these values
 int catPosX, catPosY, catWidth, catHeight;
+
+//globals for mapLocation and zoom level
+int worldPosX, worldPosY, worldZoom;
 
 //Menu handler
 HMENU hMenu;
@@ -61,9 +72,12 @@ HBITMAP hCatImage;
 HBITMAP hDownArrow, hUpArrow, hLeftArrow, hRightArrow;
 HBITMAP hMinus, hPlus;
 HBITMAP hGameWorldView;
+HBITMAP hCoastTile, hDirtTile, hOceanTile;
 
 //CAT
 HWND hCat;
+
+
 
 int main() {
     // Register window class
@@ -74,6 +88,12 @@ int main() {
     catPosY = 250;
     catWidth = 150;
     catHeight = 150;
+
+    //initialize our world zoom options
+    //eventually we want to have these loaded in from a custom file so that we can preserve progress between sessions
+    worldPosX = 350;
+    worldPosY = 150;
+
 
     WNDCLASS wc = {0};
 
@@ -123,11 +143,13 @@ int main() {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
-            loadImages();
+            loadButtonImages();
             AddMenus(hwnd);
             AddControls(hwnd);
             AddMapControls(hwnd);
 
+            //TODO: Move these declarations into loadButtonImages or similar
+            //TODO: Make the texture loads an array of HBITMAPS
             //we are gonna test having a bitmap that displays the game world
             hGameWorldView = (HBITMAP)LoadImage(
                     NULL,
@@ -135,6 +157,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     IMAGE_BITMAP,
                     400,
                     400,
+                    LR_LOADFROMFILE
+            );
+            //lets load in some test tiles so that we can work on bitblt
+            hCoastTile = (HBITMAP)LoadImage(
+                    NULL,
+                    "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile.bmp",
+                    IMAGE_BITMAP,
+                    128,
+                    128,
+                    LR_LOADFROMFILE
+                    );
+            hDirtTile = (HBITMAP)LoadImage(
+                    NULL,
+                    "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\dirt_tile.bmp",
+                    IMAGE_BITMAP,
+                    128,
+                    128,
+                    LR_LOADFROMFILE
+                    );
+            hOceanTile = (HBITMAP)LoadImage(
+                    NULL,
+                    "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\ocean_tile.bmp",
+                    IMAGE_BITMAP,
+                    128,
+                    128,
                     LR_LOADFROMFILE
             );
 
@@ -219,21 +266,56 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            //adding in this stuff to test out bitblt
+            // Adding in this stuff to test out bitblt
             BITMAP bitmap;
             HDC hdcMem;
             HGDIOBJ oldBitmap;
             HDC hdc = BeginPaint(hwnd, &ps);
-            FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW+1));
-            //bitmap printing code
+            FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+
+            // Draw hGameWorldView
             hdcMem = CreateCompatibleDC(hdc);
             oldBitmap = SelectObject(hdcMem, hGameWorldView);
             GetObject(hGameWorldView, sizeof(BITMAP), &bitmap);
-            BitBlt(hdc, 700, 400, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            SelectObject(hdcMem, oldBitmap);
+            DeleteDC(hdcMem);
+
+            // Draw hcoastTile
+            hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hcoastTile
+            oldBitmap = SelectObject(hdcMem, hCoastTile);
+            if (GetObject(hCoastTile, sizeof(BITMAP), &bitmap) == 0) {
+                // Error retrieving bitmap information
+                // Handle the error accordingly
+            }
+            BitBlt(hdc, WORLD_SCREEN_POS_X + 128, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            SelectObject(hdcMem, oldBitmap);
+            DeleteDC(hdcMem);
+
+            // Draw hDirtTile
+            hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hDirtTile
+            oldBitmap = SelectObject(hdcMem, hDirtTile);
+            if (GetObject(hDirtTile, sizeof(BITMAP), &bitmap) == 0) {
+                // Error retrieving bitmap information
+                // Handle the error accordingly
+            }
+            BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            SelectObject(hdcMem, oldBitmap);
+            DeleteDC(hdcMem);
+
+            // Draw hOceanTile
+            hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hDirtTile
+            oldBitmap = SelectObject(hdcMem, hOceanTile);
+            if (GetObject(hOceanTile, sizeof(BITMAP), &bitmap) == 0) {
+                // Error retrieving bitmap information
+                // Handle the error accordingly
+            }
+            BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
             EndPaint(hwnd, &ps);
+
         }
             return 0;
         case WM_CLOSE:
@@ -404,8 +486,8 @@ void AddControls(HWND hwnd)
             NULL,
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
-            450,
-            450,
+            550,
+            550,
             40,
             60,
 
@@ -421,7 +503,7 @@ void AddControls(HWND hwnd)
             NULL,
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
-            450,
+            550,
             50,
             40,
             60,
@@ -438,8 +520,8 @@ void AddControls(HWND hwnd)
             NULL,
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
-            650,
-            250,
+            950,
+            300,
             60,
             40,
 
@@ -456,7 +538,7 @@ void AddControls(HWND hwnd)
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
             250,
-            250,
+            300,
             60,
             40,
 
@@ -472,8 +554,8 @@ void AddControls(HWND hwnd)
             NULL,
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
-            350,
-            465,
+            450,
+            565,
             60,
             30,
 
@@ -489,8 +571,8 @@ void AddControls(HWND hwnd)
             NULL,
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
-            530,
-            465,
+            650,
+            565,
             30,
             30,
 
@@ -520,7 +602,7 @@ void AddMapControls(HWND hwnd)
 }
 
 
-void loadImages()
+void loadButtonImages()
 {
 
     //May require a 24 bit depth bitmap?!?
