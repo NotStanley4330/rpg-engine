@@ -1,5 +1,5 @@
 //
-// Created by starw on 3/4/2024.
+// Created by Michael Norris on 3/4/2024.
 //
 #include <windows.h>
 #include <winuser.h>
@@ -7,7 +7,9 @@
 #ifndef RPG_ENGINE_MAPTILES_H
 #define RPG_ENGINE_MAPTILES_H
 
-#define DEFAULT_TILE_SIZE 128
+#define DEFAULT_TILE_SIZE 64
+#define DEFAULT_TILES_WIDE 4
+#define DEFAULT_TILES_TALL 3
 
 struct Bitmap
 {

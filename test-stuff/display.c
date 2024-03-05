@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <winuser.h>
 #include "maptiles.h"
+#include "file_input_output.h"
 
 
 //consts for menu items
@@ -53,7 +54,8 @@ void loadButtonImages();
 int catPosX, catPosY, catWidth, catHeight;
 
 //globals for mapLocation and zoom level
-int worldPosX, worldPosY, worldZoom;
+int worldPosX, worldPosY;
+float worldZoom;
 
 //Menu handler
 HMENU hMenu;
@@ -72,13 +74,14 @@ HBITMAP hCatImage;
 HBITMAP hDownArrow, hUpArrow, hLeftArrow, hRightArrow;
 HBITMAP hMinus, hPlus;
 HBITMAP hGameWorldView;
-HBITMAP hCoastTile, hDirtTile, hOceanTile;
 
 //CAT
 HWND hCat;
 
 //ALL THE BITMAPS
 struct Bitmap bitmaps[3];
+//ALL THE TILES
+struct MapTile** mapTiles;
 
 
 int main() {
@@ -95,6 +98,7 @@ int main() {
     //eventually we want to have these loaded in from a custom file so that we can preserve progress between sessions
     worldPosX = 350;
     worldPosY = 150;
+    worldZoom = 2.0;
 
     //here we should load in some bitmaps
 
@@ -107,6 +111,16 @@ int main() {
     bitmaps[2].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\ocean_tile.bmp";
     LoadBitmaps(bitmaps, 3);
 
+    //load in all the tiles
+    int numTilesX = 20;
+    int numTilesY = 20;
+    //lets set up the mapTiles array
+    mapTiles = (struct MapTile **)malloc(numTilesX * sizeof(struct MapTile *));
+    for (int x = 0; x < numTilesX; x++)
+    {
+        mapTiles[x] = (struct MapTile *)malloc(numTilesY * sizeof(struct MapTile));
+    }
+    ReadMapFile("NoFileHere",bitmaps, mapTiles, numTilesX, numTilesY);
 
 
 
@@ -150,6 +164,13 @@ int main() {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
+    //we done gone and malloced a TON of memory so lets free it all
+    for (int x = 0; x < numTilesX; x++)
+    {
+        free(mapTiles[x]);
+    }
+    free(mapTiles);
 
     return 0;
 }
@@ -241,6 +262,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     catHeight = (int)(catHeight * 0.9);
                     catWidth = (int)(catWidth * 0.9);
                     MoveAndResizeCatImage();
+                    //decrease tile size by half
+                    worldZoom = worldZoom / 2;
+                    InvalidateRect(hwnd, NULL, TRUE);
+
                     break;
                 }
                 case ZOOM_IN:
@@ -249,6 +274,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     catHeight = (int)(catHeight * 1.1);
                     catWidth = (int)(catWidth *1.1);
                     MoveAndResizeCatImage();
+                    //increase tile size by 2
+                    worldZoom *= 2;
+                    InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
             }
@@ -256,6 +284,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_PAINT:
         {
             //TODO: MOVE ALL THIS STUFF TO THE MAP TILES DRAW FUNCTION
+            //NOTE: Use StretchBlt for ease of resizing tiles and textures
+
             PAINTSTRUCT ps;
             // Adding in this stuff to test out bitblt
             BITMAP bitmap;
@@ -279,22 +309,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 // Error retrieving bitmap information
                 // Handle the error accordingly
             }
-            BitBlt(hdc, WORLD_SCREEN_POS_X + 128, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X + 128, WORLD_SCREEN_POS_Y + 128, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X + 128, WORLD_SCREEN_POS_Y + 256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (DEFAULT_TILE_SIZE * worldZoom), WORLD_SCREEN_POS_Y,
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (DEFAULT_TILE_SIZE * worldZoom),
+                       WORLD_SCREEN_POS_Y + (DEFAULT_TILE_SIZE * worldZoom),
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (DEFAULT_TILE_SIZE * worldZoom),
+                       WORLD_SCREEN_POS_Y + (2 * DEFAULT_TILE_SIZE * worldZoom),
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
-            // Draw hDirtTile
+            // Draw hDirtTile thrice
             hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hDirtTile
             oldBitmap = SelectObject(hdcMem, bitmaps[1].image);
             if (GetObject(bitmaps[1].image, sizeof(BITMAP), &bitmap) == 0) {
                 // Error retrieving bitmap information
                 // Handle the error accordingly
             }
-            BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y+128, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y,
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y + (DEFAULT_TILE_SIZE * worldZoom),
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y + (2 * DEFAULT_TILE_SIZE * worldZoom),
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
@@ -305,12 +350,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 // Error retrieving bitmap information
                 // Handle the error accordingly
             }
-            BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y+128, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X+384, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X+384, WORLD_SCREEN_POS_Y+128, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-            BitBlt(hdc, WORLD_SCREEN_POS_X+384, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (2 * DEFAULT_TILE_SIZE * worldZoom), WORLD_SCREEN_POS_Y,
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (2 * DEFAULT_TILE_SIZE * worldZoom),
+                       WORLD_SCREEN_POS_Y + (DEFAULT_TILE_SIZE * worldZoom),
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (3 * DEFAULT_TILE_SIZE * worldZoom), WORLD_SCREEN_POS_Y,
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (3 * DEFAULT_TILE_SIZE * worldZoom),
+                       WORLD_SCREEN_POS_Y + (DEFAULT_TILE_SIZE * worldZoom),
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            //BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            //BitBlt(hdc, WORLD_SCREEN_POS_X+384, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (2 * DEFAULT_TILE_SIZE * worldZoom),
+                       WORLD_SCREEN_POS_Y + (2 * DEFAULT_TILE_SIZE * worldZoom),
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+            StretchBlt(hdc, WORLD_SCREEN_POS_X + (3 * DEFAULT_TILE_SIZE * worldZoom),
+                       WORLD_SCREEN_POS_Y + (2 * DEFAULT_TILE_SIZE * worldZoom),
+                       DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
