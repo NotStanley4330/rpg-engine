@@ -38,7 +38,7 @@ int ReadMapFile(char* fileName, struct Bitmap* bitmaps, struct MapTile** mapTile
             //we need to find the bitmap associated with the name of the tile
             for (int z = 0; z < 3; z++)
             {
-                if (strcmp(tileName, bitmaps[z].name))
+                if (strcmp(tileName, bitmaps[z].name) == 0)
                 {
                     mapTiles[x][y].bitmap = &bitmaps[z];
                 }

@@ -29,7 +29,7 @@ struct MapTile
 
 void LoadBitmaps(struct Bitmap*, int);//this function will load in all the bitmaps for use in the editor
 
-void DrawMapTiles(struct MapTile**, int, int);
+void DrawMapTiles(struct MapTile**, int, int, int, int, float, HWND, HBITMAP);
 
 void LoadTileImages();
 
