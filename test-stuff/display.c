@@ -285,7 +285,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_PAINT:
         {
-            //TODO: MOVE ALL THIS STUFF TO THE MAP TILES DRAW FUNCTION
+            //TODO:
             //NOTE: Use StretchBlt for ease of resizing tiles and textures
 
             DrawMapTiles(mapTiles, 4, 3, 512, 512, worldZoom, hwnd, bitmaps[3].image);

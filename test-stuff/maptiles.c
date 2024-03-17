@@ -32,10 +32,15 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
     SelectObject(hdcMem, oldBitmap);
     DeleteDC(hdcMem);
 
+
+    //TODO: Make a loop here that draws the tiles programmatically
+
+
     // Draw hcoastTile thrice
     hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hcoastTile
     oldBitmap = SelectObject(hdcMem, mapTiles[7][0].bitmap->image);
-    if (GetObject(mapTiles[7][0].bitmap->image, sizeof(BITMAP), &bitmap) == 0) {
+    if (GetObject(mapTiles[7][0].bitmap->image, sizeof(BITMAP), &bitmap) == 0)
+    {
         // Error retrieving bitmap information
         // Handle the error accordingly
     }
