@@ -36,6 +36,8 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
     //TODO: Make a loop here that draws the tiles programmatically
 
 
+
+
     // Draw hcoastTile thrice
     hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hcoastTile
     oldBitmap = SelectObject(hdcMem, mapTiles[7][0].bitmap->image);
@@ -131,3 +133,5 @@ void LoadBitmaps(struct Bitmap* images, int numBitmaps)
         );
     }
 }
+
+
