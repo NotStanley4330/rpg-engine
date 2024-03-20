@@ -285,10 +285,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_PAINT:
         {
-            \
             //NOTE: Use StretchBlt for ease of resizing tiles and textures
 
-            DrawMapTiles(mapTiles, 4, 3, 512, 512, worldZoom, hwnd, bitmaps[3].image);
+            DrawMapTiles(mapTiles, 4, 4, 512, 512, worldZoom, hwnd, bitmaps[3].image);
 
         }
             return 0;
