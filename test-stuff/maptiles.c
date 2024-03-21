@@ -4,7 +4,7 @@
 #include "maptiles.h"
 
 #define WORLD_SCREEN_POS_X 350
-#define WORLD_SCREEN_POS_Y 150
+#define WORLD_SCREEN_POS_Y 130
 
 struct MapTile** currMapTiles;
 
@@ -27,7 +27,8 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
     hdcMem = CreateCompatibleDC(hdc);
     oldBitmap = SelectObject(hdcMem, backgroundBitmap);
     GetObject(backgroundBitmap, sizeof(BITMAP), &bitmap);
-    BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+    BitBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y, bitmap.bmWidth, bitmap.bmHeight,
+           hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, oldBitmap);
     DeleteDC(hdcMem);
 
@@ -35,13 +36,13 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
     //TODO: Make a loop here that draws the tiles programmatically
 
     //code to determine the position of the upper left corner based on zoom level and worldPos
-    int topLeftScreenPosX = worldPosX - ((width / 2) * (int)(DEFAULT_TILE_SIZE * worldZoom));
-    int topLeftScreenPosY = worldPosY - ((height / 2) * (int)(DEFAULT_TILE_SIZE * worldZoom));
+    int topLeftWorldPosX = worldPosX - ((width / 2) * (int)(DEFAULT_TILE_SIZE));
+    int topLeftWorldPosY = worldPosY - ((height / 2) * (int)(DEFAULT_TILE_SIZE));
 
     //temp code to progtamatically populate the CurrTiles, eventually this will pull from
     //the total title to create a current tile set to render
-    int tileXNum = topLeftScreenPosX / (int)(DEFAULT_TILE_SIZE * worldZoom);
-    int tileYNum = topLeftScreenPosX / (int)(DEFAULT_TILE_SIZE * worldZoom);
+    int tileXNum = topLeftWorldPosX / (int)(DEFAULT_TILE_SIZE);
+    int tileYNum = topLeftWorldPosY / (int)(DEFAULT_TILE_SIZE);
 
     //populate our currMapTiles array
 
@@ -59,6 +60,8 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
             //this copies the tile over in it's entirety, I may want to make this a pointer to
             //the existing tile in the future to avoid wholesale copies.
             currMapTiles[x][y] = mapTiles[tileXNum + x][tileYNum + 0];
+
+            //I also need to do some kind of error checking so I don't jsut grab more tiles than exist properly
         }
     }
 
@@ -69,7 +72,7 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
         for (int y = 0; y < height; y++)
         {
             hdcMem = CreateCompatibleDC(hdc);//Create a new memory DC for the current tile
-            oldBitmap = SelectObject(hdcMem, mapTiles[x][y].bitmap->image);
+            oldBitmap = SelectObject(hdcMem, currMapTiles[x][y].bitmap->image);
 
             //ignore error handling for now, just StrectchBlt with reckless abandon!!!
             StretchBlt(hdc, WORLD_SCREEN_POS_X + ((int)(DEFAULT_TILE_SIZE * worldZoom) * x),

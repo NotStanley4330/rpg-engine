@@ -34,9 +34,9 @@
 
 //consts for world screen position, as well as size
 #define WORLD_SCREEN_POS_X 350
-#define WORLD_SCREEN_POS_Y 150
-#define WORLD_SCREEN_WIDTH_TILES 5
-#define WORLD_SCREEN_HEIGHT_TILES 5
+#define WORLD_SCREEN_POS_Y 130
+#define WORLD_SCREEN_WIDTH_TILES 4
+#define WORLD_SCREEN_HEIGHT_TILES 4
 
 
 // Function prototypes
@@ -46,7 +46,6 @@ void AddMenus(HWND);
 void AddControls(HWND);
 void AddMapControls(HWND);
 void exitDialog(HWND);
-void MoveAndResizeCatImage();
 
 void loadButtonImages();
 
@@ -96,8 +95,8 @@ int main() {
 
     //initialize our world zoom options
     //eventually we want to have these loaded in from a custom file so that we can preserve progress between sessions
-    worldPosX = 350;
-    worldPosY = 150;
+    worldPosX = 256;
+    worldPosY = 512;
     worldZoom = 2.0;
 
     //here we should load in some bitmaps
@@ -224,58 +223,50 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     int xLen = GetWindowTextLength(hXCoord);
                     char* xCoord = (char*)malloc((xLen + 1) * sizeof(char));
                     GetWindowText(hXCoord, xCoord, xLen + 1);
-                    catPosX = atoi(xCoord);
+                    worldPosX = atoi(xCoord);
                     //let's do the same for the y coord control
                     int yLen = GetWindowTextLength(hYCoord);
                     char* yCoord = (char*)malloc((yLen + 1) * sizeof(char));
                     GetWindowText(hYCoord, yCoord, yLen + 1);
-                    catPosY = atoi(yCoord);
-                    //now move the cat to these coordiantes
-                    MoveAndResizeCatImage();
+                    worldPosY = atoi(yCoord);
+                    InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
                 case Y_COORD_INCREASE:
                 {
-                    catPosY += 10;
-                    MoveAndResizeCatImage();
+                    //move over by one tile for simplicity
+                    worldPosY += (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
+                    InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
                 case Y_COORD_DECREASE:
                 {
-                    catPosY -= 10;
-                    MoveAndResizeCatImage();
+                    worldPosY -= (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
+                    InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
                 case X_COORD_INCREASE:
                 {
-                    catPosX += 10;
-                    MoveAndResizeCatImage();
+                    worldPosX += (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
+                    InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
                 case X_COORD_DECREASE:
                 {
-                    catPosX -= 10;
-                    MoveAndResizeCatImage();
+
+                    worldPosX -= (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
+                    InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
                 case ZOOM_OUT:
                 {
-                    //Decrease cat size by 10%
-                    catHeight = (int)(catHeight * 0.9);
-                    catWidth = (int)(catWidth * 0.9);
-                    MoveAndResizeCatImage();
                     //decrease tile size by half
                     worldZoom = worldZoom / 2;
                     InvalidateRect(hwnd, NULL, TRUE);
-
                     break;
                 }
                 case ZOOM_IN:
                 {
-                    //Increase cat size by 10%
-                    catHeight = (int)(catHeight * 1.1);
-                    catWidth = (int)(catWidth *1.1);
-                    MoveAndResizeCatImage();
                     //increase tile size by 2
                     worldZoom *= 2;
                     InvalidateRect(hwnd, NULL, TRUE);
@@ -286,8 +277,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_PAINT:
         {
             //NOTE: Use StretchBlt for ease of resizing tiles and textures
-
-            DrawMapTiles(mapTiles, 4, 4, 512, 512, worldZoom, hwnd, bitmaps[3].image);
+            int tilesHigh = WORLD_SCREEN_WIDTH_TILES / (worldZoom / 2);
+            int tilesWide = WORLD_SCREEN_HEIGHT_TILES / (worldZoom / 2);
+            DrawMapTiles(mapTiles, tilesHigh, tilesWide, worldPosX, worldPosY, worldZoom, hwnd, bitmaps[3].image);
 
         }
             return 0;
@@ -382,7 +374,7 @@ void AddControls(HWND hwnd)
     hXCoord = CreateWindowEx(
             0,
             "Edit",
-            "400",
+            "256",
             WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER,
 
             100,
@@ -400,7 +392,7 @@ void AddControls(HWND hwnd)
     hYCoord = CreateWindowEx(
             0,
             "Edit",
-            "250",
+            "512",
             WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER,
 
             160,
@@ -460,7 +452,7 @@ void AddControls(HWND hwnd)
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
             550,
-            550,
+            650,
             40,
             60,
 
@@ -528,7 +520,7 @@ void AddControls(HWND hwnd)
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
             450,
-            565,
+            665,
             60,
             30,
 
@@ -545,7 +537,7 @@ void AddControls(HWND hwnd)
             WS_VISIBLE | WS_CHILD | BS_BITMAP,
 
             650,
-            565,
+            665,
             30,
             30,
 
@@ -586,14 +578,6 @@ void loadButtonImages()
     * I also want to probably put all that functionality in that file, this file should be purely for       *
     * window controls for the main window. If I create sub-windows I probably want their control broken out *
     *********************************************************************************************************/
-    hCatImage = (HBITMAP)LoadImage(
-            NULL,
-            "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\cat2.bmp",
-            IMAGE_BITMAP,
-            catWidth,
-            catHeight,
-            LR_LOADFROMFILE
-            );
 
     hDownArrow = (HBITMAP)LoadImage(
             NULL,
@@ -647,26 +631,6 @@ void loadButtonImages()
             30,
             LR_LOADFROMFILE
     );
-
-
-}
-
-void MoveAndResizeCatImage()
-{
-    //set the size and position of the cat
-    SetWindowPos(
-            hCat,
-            HWND_TOP,
-            catPosX,
-            catPosY,
-            catWidth,
-            catHeight,
-            SWP_NOCOPYBITS
-    );
-
-    //will want to use InvalidateRect to force a redraw I think
-
-
 
 
 }
