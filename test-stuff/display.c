@@ -44,8 +44,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void AddMenus(HWND);
 void AddControls(HWND);
-void AddMapControls(HWND);
 void exitDialog(HWND);
+int canZoomMove(float, int, int);
 
 void loadButtonImages();
 
@@ -81,6 +81,8 @@ HWND hCat;
 struct Bitmap bitmaps[4];
 //ALL THE TILES
 struct MapTile** mapTiles;
+//dirty globals so I can easily keep track of the number of tiles
+int numTilesX, numTilesY;
 
 
 int main() {
@@ -113,8 +115,8 @@ int main() {
     LoadBitmaps(bitmaps, 4);
 
     //load in all the tiles
-    int numTilesX = 20;
-    int numTilesY = 20;
+    numTilesX = 20;
+    numTilesY = 20;
     //lets set up the mapTiles array
     mapTiles = (struct MapTile **)malloc(numTilesX * sizeof(struct MapTile *));
     for (int x = 0; x < numTilesX; x++)
@@ -184,7 +186,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             loadButtonImages();
             AddMenus(hwnd);
             AddControls(hwnd);
-            AddMapControls(hwnd);
 
             //we are gonna test having a bitmap that displays the game world
             hGameWorldView = (HBITMAP)LoadImage(
@@ -223,53 +224,83 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     int xLen = GetWindowTextLength(hXCoord);
                     char* xCoord = (char*)malloc((xLen + 1) * sizeof(char));
                     GetWindowText(hXCoord, xCoord, xLen + 1);
-                    worldPosX = atoi(xCoord);
+                    int newWorldPosX = atoi(xCoord);
                     //let's do the same for the y coord control
                     int yLen = GetWindowTextLength(hYCoord);
                     char* yCoord = (char*)malloc((yLen + 1) * sizeof(char));
                     GetWindowText(hYCoord, yCoord, yLen + 1);
-                    worldPosY = atoi(yCoord);
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    int newWorldPosY = atoi(yCoord);
+                    if (canZoomMove(worldZoom, newWorldPosX, newWorldPosY))
+                    {
+                        worldPosX = newWorldPosX;
+                        worldPosY = newWorldPosY;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
                     break;
                 }
                 case Y_COORD_INCREASE:
                 {
                     //move over by one tile for simplicity
-                    worldPosY += (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    int newWorldPosY = worldPosY + (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
+                    if (canZoomMove(worldZoom, worldPosX, newWorldPosY))
+                    {
+                        worldPosY = newWorldPosY;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
                     break;
                 }
                 case Y_COORD_DECREASE:
                 {
-                    worldPosY -= (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    int newWorldPosY = worldPosY - (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
+                    if (canZoomMove(worldZoom, worldPosX, newWorldPosY))
+                    {
+                        worldPosY = newWorldPosY;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
                     break;
                 }
                 case X_COORD_INCREASE:
                 {
-                    worldPosX += (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    int newWorldPosX = worldPosX + (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
+                    if (canZoomMove(worldZoom, newWorldPosX, worldPosY))
+                    {
+                        worldPosX = newWorldPosX;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
                     break;
                 }
                 case X_COORD_DECREASE:
                 {
-
-                    worldPosX -= (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    //move left by one tile at normal zoom (or zoom dependent number) if possible
+                    int newWorldPosX = worldPosX - (int)(DEFAULT_TILE_SIZE * (2 / worldZoom));
+                    if (canZoomMove(worldZoom, newWorldPosX, worldPosY))
+                    {
+                        worldPosX = newWorldPosX;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
                     break;
                 }
                 case ZOOM_OUT:
                 {
-                    //decrease tile size by half
-                    worldZoom = worldZoom / 2;
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    //decrease tile size in view by half if possible
+                    float newWorldZoom = worldZoom / 2;
+                    if(canZoomMove(newWorldZoom, worldPosX, worldPosY))
+                    {
+                        worldZoom = newWorldZoom;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+
                     break;
                 }
                 case ZOOM_IN:
                 {
-                    //increase tile size by 2
-                    worldZoom *= 2;
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    //increase tile size by 2 in view if possible
+                    float newWorldZoom = worldZoom * 2;
+                    if(canZoomMove(newWorldZoom, worldPosX, worldPosY))
+                    {
+                        worldZoom = newWorldZoom;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
                     break;
                 }
             }
@@ -279,7 +310,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             //NOTE: Use StretchBlt for ease of resizing tiles and textures
             int tilesHigh = WORLD_SCREEN_WIDTH_TILES / (worldZoom / 2);
             int tilesWide = WORLD_SCREEN_HEIGHT_TILES / (worldZoom / 2);
-            DrawMapTiles(mapTiles, tilesHigh, tilesWide, worldPosX, worldPosY, worldZoom, hwnd, bitmaps[3].image);
+            DrawMapTiles(mapTiles, tilesWide, tilesHigh, worldPosX, worldPosY, worldZoom, hwnd, bitmaps[3].image);
 
         }
             return 0;
@@ -333,6 +364,7 @@ void AddMenus(HWND hwnd)
     SetMenu(hwnd, hMenu);
 }
 
+//This function creates the actual buttons
 void AddControls(HWND hwnd)
 {
     //Create the static text for the coord manual controls
@@ -561,12 +593,7 @@ void AddControls(HWND hwnd)
 
 }
 
-void AddMapControls(HWND hwnd)
-{
-
-}
-
-
+//This function loads in all the bitmaps for buttons
 void loadButtonImages()
 {
 
@@ -634,3 +661,46 @@ void loadButtonImages()
 
 
 }
+
+//this function will be used to check whether a zoom or x/y camera movement should be allowed or not
+//it will return 1 if allowed, and zero if it is not
+//The function accepts up to three values but only one may be being changed, so the calling function should feed
+//the old values if they are not being updated
+int canZoomMove(float newZoomValue, int newXPos, int newYPos)
+{
+    int tilesHigh = WORLD_SCREEN_WIDTH_TILES / (newZoomValue / 2);
+    int tilesWide = WORLD_SCREEN_HEIGHT_TILES / (newZoomValue / 2);
+    int topLeftWorldPosX = newXPos - ((tilesWide / 2) * (int)(DEFAULT_TILE_SIZE));
+    int topLeftWorldPosY = newYPos - ((tilesHigh / 2) * (int)(DEFAULT_TILE_SIZE));
+    int tileXNumTopLeft = topLeftWorldPosX / (int)(DEFAULT_TILE_SIZE);
+    int tileYNumTopLeft = topLeftWorldPosY / (int)(DEFAULT_TILE_SIZE);
+
+    //let's also calculate where the bottom right tile is so that
+    //we can check if it is out of bounds
+    int bottomRightWorldPosX = newXPos + ((tilesWide / 2) * (int)(DEFAULT_TILE_SIZE));
+    int bottomRightWorldPosY = newYPos + ((tilesHigh / 2) * (int)(DEFAULT_TILE_SIZE));
+    int tileXNumBottomRight = bottomRightWorldPosX / (int)(DEFAULT_TILE_SIZE);
+    int tileYNumBottomRight = bottomRightWorldPosY / (int)(DEFAULT_TILE_SIZE);
+
+    //if the zoom will extend the view port further than the range of map tiles in any direction,
+    //disallow the zoom by returning 0
+    if (tileXNumTopLeft < 0 || tileYNumTopLeft < 0)
+    {
+        return 0;
+    }
+    else if (tileXNumBottomRight >= numTilesX || tileYNumBottomRight >= numTilesY)
+    {
+        return 0;
+    }
+    else if (tilesWide <= 0 ||tilesHigh <= 0)
+    {
+        //also disallow the zoom if the screen area would be smaller than a single tile
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+
+}
+

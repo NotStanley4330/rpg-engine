@@ -33,8 +33,6 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
     DeleteDC(hdcMem);
 
 
-    //TODO: Make a loop here that draws the tiles programmatically
-
     //code to determine the position of the upper left corner based on zoom level and worldPos
     int topLeftWorldPosX = worldPosX - ((width / 2) * (int)(DEFAULT_TILE_SIZE));
     int topLeftWorldPosY = worldPosY - ((height / 2) * (int)(DEFAULT_TILE_SIZE));
@@ -57,11 +55,12 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
     {
         for (int y = 0; y < height; y++)
         {
-            //this copies the tile over in it's entirety, I may want to make this a pointer to
+            //this copies the tile over in its entirety, I may want to make this a pointer to
             //the existing tile in the future to avoid wholesale copies.
             currMapTiles[x][y] = mapTiles[tileXNum + x][tileYNum + 0];
 
-            //I also need to do some kind of error checking so I don't jsut grab more tiles than exist properly
+            //I also need to do some kind of error checking so that I don't just grab more tiles than exist properly
+            //the move and zoom functions SHOULD catch this, but I also should just error check it here for safety
         }
     }
 
@@ -83,83 +82,6 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
             DeleteDC(hdcMem);
         }
     }
-
-
-    // Draw hcoastTile thrice
-//    hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hcoastTile
-//    oldBitmap = SelectObject(hdcMem, mapTiles[7][0].bitmap->image);
-//    if (GetObject(mapTiles[7][0].bitmap->image, sizeof(BITMAP), &bitmap) == 0)
-//    {
-//        // Error retrieving bitmap information
-//        // Handle the error accordingly
-//    }
-//
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (DEFAULT_TILE_SIZE * worldZoom), WORLD_SCREEN_POS_Y,
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (DEFAULT_TILE_SIZE * worldZoom),
-//               WORLD_SCREEN_POS_Y + (DEFAULT_TILE_SIZE * worldZoom),
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (DEFAULT_TILE_SIZE * worldZoom),
-//               WORLD_SCREEN_POS_Y + (2 * DEFAULT_TILE_SIZE * worldZoom),
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    SelectObject(hdcMem, oldBitmap);
-//    DeleteDC(hdcMem);
-//
-//    // Draw hDirtTile thrice
-//    hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hDirtTile
-//    oldBitmap = SelectObject(hdcMem, mapTiles[5][0].bitmap->image);
-//    if (GetObject(mapTiles[5][0].bitmap->image, sizeof(BITMAP), &bitmap) == 0) {
-//        // Error retrieving bitmap information
-//        // Handle the error accordingly
-//    }
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y,
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y + (DEFAULT_TILE_SIZE * worldZoom),
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X, WORLD_SCREEN_POS_Y + (2 * DEFAULT_TILE_SIZE * worldZoom),
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    SelectObject(hdcMem, oldBitmap);
-//    DeleteDC(hdcMem);
-//
-//    // Draw hOceanTile a few times
-//    hdcMem = CreateCompatibleDC(hdc); // Create a new memory DC for hDirtTile
-//    oldBitmap = SelectObject(hdcMem, mapTiles[7][0].bitmap->image);
-//    if (GetObject(mapTiles[7][0].bitmap->image, sizeof(BITMAP), &bitmap) == 0) {
-//        // Error retrieving bitmap information
-//        // Handle the error accordingly
-//    }
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (2 * DEFAULT_TILE_SIZE * worldZoom), WORLD_SCREEN_POS_Y,
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (2 * DEFAULT_TILE_SIZE * worldZoom),
-//               WORLD_SCREEN_POS_Y + (DEFAULT_TILE_SIZE * worldZoom),
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (3 * DEFAULT_TILE_SIZE * worldZoom), WORLD_SCREEN_POS_Y,
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (3 * DEFAULT_TILE_SIZE * worldZoom),
-//               WORLD_SCREEN_POS_Y + (DEFAULT_TILE_SIZE * worldZoom),
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    //BitBlt(hdc, WORLD_SCREEN_POS_X+256, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-//    //BitBlt(hdc, WORLD_SCREEN_POS_X+384, WORLD_SCREEN_POS_Y+256, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (2 * DEFAULT_TILE_SIZE * worldZoom),
-//               WORLD_SCREEN_POS_Y + (2 * DEFAULT_TILE_SIZE * worldZoom),
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    StretchBlt(hdc, WORLD_SCREEN_POS_X + (3 * DEFAULT_TILE_SIZE * worldZoom),
-//               WORLD_SCREEN_POS_Y + (2 * DEFAULT_TILE_SIZE * worldZoom),
-//               DEFAULT_TILE_SIZE * worldZoom, DEFAULT_TILE_SIZE * worldZoom, hdcMem,
-//               0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-//    SelectObject(hdcMem, oldBitmap);
-//    DeleteDC(hdcMem);
 
     EndPaint(hwnd, &ps);
 
