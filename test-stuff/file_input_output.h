@@ -8,4 +8,6 @@
 
 int ReadMapFile(char*, struct Bitmap*, struct MapTile**, int, int);
 
+int WriteMapFile(char*, struct Bitmap*, struct MapTile**, int, int);
+
 #endif //RPG_ENGINE_FILE_INPUT_OUTPUT_H

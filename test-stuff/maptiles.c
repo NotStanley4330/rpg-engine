@@ -2,6 +2,7 @@
 // Created by Michael Norris on 3/4/2024.
 //
 #include "maptiles.h"
+#include <stdio.h>
 
 #define WORLD_SCREEN_POS_X 350
 #define WORLD_SCREEN_POS_Y 130
@@ -57,7 +58,7 @@ void DrawMapTiles(struct MapTile** mapTiles, int width, int height, int worldPos
         {
             //this copies the tile over in its entirety, I may want to make this a pointer to
             //the existing tile in the future to avoid wholesale copies.
-            currMapTiles[x][y] = mapTiles[tileXNum + x][tileYNum + 0];
+            currMapTiles[x][y] = mapTiles[tileXNum + x][tileYNum + y];
 
             //I also need to do some kind of error checking so that I don't just grab more tiles than exist properly
             //the move and zoom functions SHOULD catch this, but I also should just error check it here for safety
@@ -107,6 +108,31 @@ void LoadBitmaps(struct Bitmap* images, int numBitmaps)
                 DEFAULT_TILE_SIZE,
                 LR_LOADFROMFILE
         );
+
+        if (images[x].image == NULL)
+        {
+            // Failed to load image
+            DWORD dwError = GetLastError(); // Optionally, you can get more information about the error
+            LPVOID lpMsgBuf;
+
+            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                          NULL,
+                          dwError,
+                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                          (LPTSTR)&lpMsgBuf,
+                          0,
+                          NULL);
+
+            // Print out the error message
+            printf("Error loading image: %s\n", (LPCTSTR)lpMsgBuf);
+
+            // Free the buffer
+            LocalFree(lpMsgBuf);
+        } else
+        {
+            printf("Image # %i loaded succesfully! File location is %s\n", x, images[x].location);
+
+        }
     }
 }
 

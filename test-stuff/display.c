@@ -78,7 +78,7 @@ HBITMAP hGameWorldView;
 HWND hCat;
 
 //ALL THE BITMAPS
-struct Bitmap bitmaps[4];
+struct Bitmap bitmaps[7];
 //ALL THE TILES
 struct MapTile** mapTiles;
 //dirty globals so I can easily keep track of the number of tiles
@@ -112,7 +112,13 @@ int main() {
     bitmaps[2].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\ocean_tile.bmp";
     bitmaps[3].name = "VIEW_BACKGROUND";
     bitmaps[3].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\world_background.bmp";
-    LoadBitmaps(bitmaps, 4);
+    bitmaps[4].name = "TILE_COAST_WEST";
+    bitmaps[4].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile_west.bmp";
+    bitmaps[5].name = "TILE_COAST_SOUTH";
+    bitmaps[5].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile_south.bmp";
+    bitmaps[6].name = "TILE_COAST_NORTH";
+    bitmaps[6].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile_north.bmp";
+    LoadBitmaps(bitmaps, 7);
 
     //load in all the tiles
     numTilesX = 20;

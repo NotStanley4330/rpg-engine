@@ -18,25 +18,47 @@ int ReadMapFile(char* fileName, struct Bitmap* bitmaps, struct MapTile** mapTile
     char* tileName = "NULL";
     for (int x = 0; x < numTilesX; x++)
     {
-        if (x < 5)
-        {
-            tileName = "TILE_DIRT";
-        }
-        else if (x < 6)
-        {
-            tileName = "TILE_COAST";
-        }
-        else
-        {
-            tileName = "TILE_OCEAN";
-        }
+
         for (int y = 0; y < numTilesY; y++)
         {
+            if (x < 5 || y < 3)
+            {
+                tileName = "TILE_DIRT";
+            }
+            else if (x < 6)
+            {
+                tileName = "TILE_COAST";
+            }
+            else if (x < 10)
+            {
+                tileName = "TILE_OCEAN";
+            }
+            else if (x < 11)
+            {
+                tileName = "TILE_COAST_WEST";
+            }
+            else if (x < 12)
+            {
+                tileName = "TILE_DIRT";
+            }
+
+            if (y < 4 && y >= 3 && x >= 6 && x < 10)
+            {
+                tileName = "TILE_COAST_SOUTH";
+            }
+            else if (y < 12 && y >= 11 && x >= 6 && x < 10)
+            {
+                tileName = "TILE_COAST_NORTH";
+            }
+            else if (y >= 12 && x >= 6 && x < 10)
+            {
+                tileName = "TILE_DIRT";
+            }
             //this is all gonna be replaced with actually reading in the file values of course
             mapTiles[x][y].xPos = x * DEFAULT_TILE_SIZE;
             mapTiles[x][y].yPos = y * DEFAULT_TILE_SIZE;
             //we need to find the bitmap associated with the name of the tile
-            for (int z = 0; z < 3; z++)
+            for (int z = 0; z < 7; z++)//TODO: Fix this to use the same size as the size of bitmaps
             {
                 if (strcmp(tileName, bitmaps[z].name) == 0)
                 {
@@ -48,4 +70,9 @@ int ReadMapFile(char* fileName, struct Bitmap* bitmaps, struct MapTile** mapTile
     }
 
     return 0;
+}
+
+int WriteMapFile(char* fileName, struct Bitmap* bitmaps, struct MapTile** mapTiles, int numX, int numY)
+{
+
 }
