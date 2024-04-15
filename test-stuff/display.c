@@ -21,6 +21,7 @@
 #define FILE_MENU_OPEN 65
 #define FILE_MENU_EXIT 66
 #define COORD_CONFIRM_BUTTON 67
+#define SAVE_FILE_BUTTON 69
 
 //consts for map position buttons
 #define X_COORD_INCREASE 20
@@ -63,6 +64,10 @@ HMENU hMenu;
 HWND hXCoord, hYCoord;
 HWND hConfCoords;
 
+//filesave controls
+HWND hFileName;
+HWND hConfFileName;
+
 //window handlers for position buttons
 HWND hDownButton, hUpButton, hLeftButton, hRightButton;
 HWND hMinusButton, hPlusButton;
@@ -76,6 +81,7 @@ HBITMAP hGameWorldView;
 
 //CAT
 HWND hCat;
+int numBitmaps = 7;
 
 //ALL THE BITMAPS
 struct Bitmap bitmaps[7];
@@ -103,22 +109,6 @@ int main() {
 
     //here we should load in some bitmaps
 
-    //This is just temporary to test the functionality of the loadBitmap functionality
-    bitmaps[0].name = "TILE_COAST";
-    bitmaps[0].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile.bmp";
-    bitmaps[1].name = "TILE_DIRT";
-    bitmaps[1].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\dirt_tile.bmp";
-    bitmaps[2].name = "TILE_OCEAN";
-    bitmaps[2].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\ocean_tile.bmp";
-    bitmaps[3].name = "VIEW_BACKGROUND";
-    bitmaps[3].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\test-stuff\\world_background.bmp";
-    bitmaps[4].name = "TILE_COAST_WEST";
-    bitmaps[4].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile_west.bmp";
-    bitmaps[5].name = "TILE_COAST_SOUTH";
-    bitmaps[5].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile_south.bmp";
-    bitmaps[6].name = "TILE_COAST_NORTH";
-    bitmaps[6].location = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\textures\\coast_tile_north.bmp";
-    LoadBitmaps(bitmaps, 7);
 
     //load in all the tiles
     numTilesX = 20;
@@ -129,7 +119,10 @@ int main() {
     {
         mapTiles[x] = (struct MapTile *)malloc(numTilesY * sizeof(struct MapTile));
     }
-    ReadMapFile("NoFileHere",bitmaps, mapTiles, numTilesX, numTilesY);
+    ReadMapFile("C:\\Users\\starw\\CLionProjects\\rpg-engine\\mapfiles\\mapfile_1_working.rpm",bitmaps, mapTiles,
+                numTilesX, numTilesY, &numBitmaps);
+//    WriteMapFile("C:\\Users\\starw\\CLionProjects\\rpg-engine\\mapfiles\\mapfile_1.rpm", bitmaps, mapTiles,
+//                 numTilesX, numTilesY, numBitmaps);
 
 
 
@@ -244,6 +237,38 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     break;
                 }
+                case SAVE_FILE_BUTTON:
+                {
+                    int nameLen = GetWindowTextLength(hFileName);
+                    char* fileName = (char*)malloc((nameLen + 1) * sizeof(char));
+                    GetWindowText(hFileName, fileName, nameLen + 1);
+                    char* fileNameFull;
+                    fileNameFull = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\mapfiles\\****************************";
+                    char fileNameFinal[256];
+                    int numCharFN = 0;
+                    for (int x = 0; x < 256; x++)
+                    {
+                        {
+                            if (fileNameFull[x] == '*')
+                            {
+                                fileNameFinal[x] = fileName[numCharFN];
+                                numCharFN++;
+                            }
+                            else if (fileNameFull[x] == '\0')
+                            {
+                                fileNameFinal[x] == '\0';
+                                break;
+                            }
+                            else
+                            {
+                                fileNameFinal[x] = fileNameFull[x];
+                            }
+                        }
+                    }
+                    WriteMapFile(fileNameFinal, bitmaps, mapTiles, numTilesX, numTilesY, numBitmaps);
+
+                    break;
+                }
                 case Y_COORD_INCREASE:
                 {
                     //move over by one tile for simplicity
@@ -334,6 +359,8 @@ void exitDialog(HWND hwnd)
 {
     if (MessageBox(hwnd, "Really quit?", "Quit dialog", MB_OKCANCEL) == IDOK)
     {
+        WriteMapFile("C:\\Users\\starw\\CLionProjects\\rpg-engine\\mapfiles\\mapfile_1_empty.rpm", bitmaps, mapTiles,
+                     numTilesX, numTilesY, numBitmaps);
         DestroyWindow(hwnd);
     }
 }
@@ -445,6 +472,41 @@ void AddControls(HWND hwnd)
 
     );
 
+    hFileName = CreateWindowEx(
+            0,
+            "Edit",
+            "mapfile_1.rpm",
+            WS_VISIBLE | WS_CHILD | WS_BORDER,
+
+            100,
+            250,
+            150,
+            20,
+
+            hwnd,
+            NULL,
+            NULL,
+            NULL
+
+    );
+
+    hConfFileName = CreateWindowEx(
+            0,
+            "Button",
+            "Save File",
+            WS_VISIBLE | WS_CHILD,
+
+            120,
+            270,
+            120,
+            20,
+
+            hwnd,
+            (HMENU)SAVE_FILE_BUTTON,
+            NULL,
+            NULL
+    );
+
 
 
     hConfCoords = CreateWindowEx(
@@ -464,24 +526,6 @@ void AddControls(HWND hwnd)
                 NULL
             );
 
-
-    //here is where we load in images
-    hCat = CreateWindowEx(
-            0,
-            "Static",
-            NULL,
-            WS_VISIBLE | WS_CHILD | SS_BITMAP,
-
-            catPosX,
-            catPosY,
-            catWidth,
-            catHeight,
-
-            hwnd,
-            NULL,
-            NULL,
-            NULL
-    );
 
     hDownButton = CreateWindowEx(
             0,

@@ -130,7 +130,6 @@ void LoadBitmaps(struct Bitmap* images, int numBitmaps)
             LocalFree(lpMsgBuf);
         } else
         {
-            printf("Image # %i loaded succesfully! File location is %s\n", x, images[x].location);
 
         }
     }
