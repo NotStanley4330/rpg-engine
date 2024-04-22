@@ -21,6 +21,7 @@
 #define FILE_MENU_OPEN 65
 #define FILE_MENU_EXIT 66
 #define COORD_CONFIRM_BUTTON 67
+#define LOAD_FILE_BUTTON 68
 #define SAVE_FILE_BUTTON 69
 
 //consts for map position buttons
@@ -66,7 +67,8 @@ HWND hConfCoords;
 
 //filesave controls
 HWND hFileName;
-HWND hConfFileName;
+HWND hSaveFile;
+HWND hLoadFile;
 
 //window handlers for position buttons
 HWND hDownButton, hUpButton, hLeftButton, hRightButton;
@@ -237,13 +239,44 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     break;
                 }
-                case SAVE_FILE_BUTTON:
+                case LOAD_FILE_BUTTON:
                 {
                     int nameLen = GetWindowTextLength(hFileName);
                     char* fileName = (char*)malloc((nameLen + 1) * sizeof(char));
                     GetWindowText(hFileName, fileName, nameLen + 1);
                     char* fileNameFull;
                     fileNameFull = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\mapfiles\\****************************";
+                    char fileNameFinal[256];
+                    int numCharFN = 0;
+                    for (int x = 0; x < 256; x++) {
+                        {
+                            if (fileNameFull[x] == '*')
+                            {
+                                fileNameFinal[x] = fileName[numCharFN];
+                                numCharFN++;
+                            } else if (fileNameFull[x] == '\0' || numCharFN == nameLen)
+                            {
+                                fileNameFinal[x] = '\0';
+                                break;
+                            } else
+                            {
+                                fileNameFinal[x] = fileNameFull[x];
+                            }
+                        }
+                    }
+                    //Now we need to read in the map file and invalidate the old rectangle
+                    ReadMapFile(fileNameFinal, bitmaps, mapTiles, numTilesX, numTilesY, &numBitmaps);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                }
+                case SAVE_FILE_BUTTON:
+                {
+                    int nameLen = GetWindowTextLength(hFileName);
+                    char* fileName = (char*)malloc((nameLen + 1) * sizeof(char));
+                    GetWindowText(hFileName, fileName, nameLen + 1);
+
+                    char* fileNameFull = "C:\\Users\\starw\\CLionProjects\\rpg-engine\\mapfiles"
+                                   "\\******************************";
                     char fileNameFinal[256];
                     int numCharFN = 0;
                     for (int x = 0; x < 256; x++)
@@ -254,9 +287,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 fileNameFinal[x] = fileName[numCharFN];
                                 numCharFN++;
                             }
-                            else if (fileNameFull[x] == '\0')
+                            else if (fileNameFull[x] == '\0' || numCharFN == nameLen)
                             {
-                                fileNameFinal[x] == '\0';
+                                fileNameFinal[x] = '\0';
                                 break;
                             }
                             else
@@ -490,19 +523,35 @@ void AddControls(HWND hwnd)
 
     );
 
-    hConfFileName = CreateWindowEx(
+    hSaveFile = CreateWindowEx(
             0,
             "Button",
             "Save File",
             WS_VISIBLE | WS_CHILD,
 
             120,
-            270,
+            305,
             120,
             20,
 
             hwnd,
             (HMENU)SAVE_FILE_BUTTON,
+            NULL,
+            NULL
+    );
+    hSaveFile = CreateWindowEx(
+            0,
+            "Button",
+            "Load File",
+            WS_VISIBLE | WS_CHILD,
+
+            120,
+            280,
+            120,
+            20,
+
+            hwnd,
+            (HMENU)LOAD_FILE_BUTTON,
             NULL,
             NULL
     );
